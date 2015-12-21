@@ -64,6 +64,10 @@ View.prototype.setDraggable = function(f) {
   this._draggable = f;
 };
 
+View.prototype.flash = function() {
+  this._bar.flash();
+};
+
 View.prototype._handleBarScroll = function() {
   this._stopEasing();
   this.emit('scroll');
@@ -71,7 +75,7 @@ View.prototype._handleBarScroll = function() {
 
 View.prototype._registerMouseEvents = function() {
   this._element.addEventListener('mouseenter', function() {
-    this._bar.flash();
+    this.flash();
   }.bind(this));
   this._element.addEventListener('mousedown', this._handleMouseDown.bind(this));
 };
@@ -157,7 +161,7 @@ View.prototype._draggingMove = function(coord) {
   this.setState(new State(s.getTotalPixels(), s.getVisiblePixels(), newScrollX));
   this.emit('scroll');
 
-  this._bar.flash();
+  this.flash();
   return true;
 };
 
@@ -234,7 +238,7 @@ View.prototype._registerWheelEvents = function() {
         pendingDelta = 0;
         secondaryDelta = 0;
 
-        this._bar.flash();
+        this.flash();
       }.bind(this));
     }
     if (this._bar.getOrientation() === Bar.ORIENTATION_HORIZONTAL) {

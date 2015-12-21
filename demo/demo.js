@@ -49,6 +49,8 @@ function addHorizontalCanvas() {
 
   v.on('scroll', drawCanvas);
   drawCanvas();
+
+  v.flash();
 }
 
 function addVerticalCanvas() {
@@ -91,4 +93,6 @@ function addVerticalCanvas() {
 
   v.on('scroll', drawCanvas);
   drawCanvas();
+
+  v.flash();
 }
