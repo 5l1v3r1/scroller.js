@@ -1,4 +1,8 @@
 window.addEventListener('load', function() {
+  addHorizontalCanvas();
+});
+
+function addHorizontalCanvas() {
   var canvas = document.createElement('canvas');
   canvas.style.position = 'absolute';
   canvas.style.width = '100%';
@@ -6,15 +10,14 @@ window.addEventListener('load', function() {
   canvas.style.top = '0';
   canvas.style.left = '0';
   canvas.style.backgroundColor = 'white';
-  canvas.width = 400;
   canvas.height = 300;
 
   var v = new window.scrollerjs.View(window.scrollerjs.View.BAR_POSITION_BOTTOM,
     canvas);
-  v.element().style.width = '400px';
+  v.element().style.width = '100%';
   v.element().style.height = '300px';
   document.body.appendChild(v.element());
-  v.setState(new window.scrollerjs.State(2000, 400, 2000-400));
+  v.setState(new window.scrollerjs.State(2000, v.element().offsetWidth, 2000-400));
   v.layout();
   v.setDraggable(true);
 
@@ -32,6 +35,16 @@ window.addEventListener('load', function() {
     }
     ctx.restore();
   };
+
+  window.addEventListener('resize', function() {
+    canvas.width = v.element().offsetWidth;
+    v.setState(new window.scrollerjs.State(2000, v.element().offsetWidth,
+      v.getState().getScrolledPixels()));
+    drawCanvas();
+  });
+
+  canvas.width = v.element().offsetWidth;
+
   v.on('scroll', drawCanvas);
   drawCanvas();
-});
+}
