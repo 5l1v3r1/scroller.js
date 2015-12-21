@@ -88,6 +88,11 @@ Bar.prototype.getState = function() {
 };
 
 Bar.prototype.setState = function(s) {
+  if (s.maxScrolledPixels() === 0) {
+    addClass(this._element, 'scrollerjs-bar-useless');
+  } else {
+    removeClass(this._element, 'scrollerjs-bar-useless');
+  }
   if (!this._state.equals(s)) {
     this._state = s;
     this.layout();
