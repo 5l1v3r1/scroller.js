@@ -65,7 +65,7 @@ Bar.prototype.element = function() {
 
 Bar.prototype.layout = function() {
   var params = this._visualParameters();
-  if (this._orientation() === Bar.ORIENTATION_HORIZONTAL) {
+  if (this.getOrientation() === Bar.ORIENTATION_HORIZONTAL) {
     this._thumb.style.left = Math.round(params.offset) + 'px';
     this._thumb.style.width = Math.round(params.thumbSize) + 'px';
   } else {
@@ -94,6 +94,10 @@ Bar.prototype.setState = function(s) {
   }
 };
 
+Bar.prototype.getOrientation = function() {
+  return this._position & 1;
+};
+
 Bar.prototype._unflash = function() {
   this._hideTimeout = null;
   var classes = this._element.className.split(' ');
@@ -120,15 +124,11 @@ Bar.prototype._visualParameters = function() {
 };
 
 Bar.prototype._size = function() {
-  if (this._orientation() === Bar.ORIENTATION_HORIZONTAL) {
+  if (this.getOrientation() === Bar.ORIENTATION_HORIZONTAL) {
     return this._element.offsetWidth;
   } else {
     return this._element.offsetHeight;
   }
-};
-
-Bar.prototype._orientation = function() {
-  return this._position & 1;
 };
 
 Bar.prototype._registerMouseEvents = function() {
@@ -171,6 +171,7 @@ Bar.prototype._handleMouseDown = function(e) {
   this._dragStartMousePos = coordinate;
 
   e.preventDefault();
+  e.stopPropagation();
 };
 
 Bar.prototype._handleMouseMove = function(e) {
@@ -208,7 +209,7 @@ Bar.prototype._handleMouseUp = function(e) {
 };
 
 Bar.prototype._mouseEventCoordinate = function(e) {
-  if (this._orientation() === Bar.ORIENTATION_VERTICAL) {
+  if (this.getOrientation() === Bar.ORIENTATION_VERTICAL) {
     return e.clientY - this._element.getBoundingClientRect().top;
   } else {
     return e.clientX - this._element.getBoundingClientRect().left;
