@@ -15,12 +15,15 @@ function View(barPosition, content) {
   this._isDragging = false;
   this._dragStartCursorPos = null;
   this._dragStartScrolledPixels = null;
+  this._dragVelocityTracker = null;
+  this._ease = null;
+
   this._boundMouseUp = this._handleMouseUp.bind(this);
   this._boundMouseMove = this._handleMouseMove.bind(this);
 
   this._registerMouseEvents();
   this._registerWheelEvents();
-  this._bar.on('scroll', this.emit.bind(this, 'scroll'));
+  this._bar.on('scroll', this._handleBarScroll.bind(this));
 }
 
 View.BAR_POSITION_LEFT = 0;
@@ -44,6 +47,7 @@ View.prototype.getState = function() {
 
 View.prototype.setState = function(s) {
   this._bar.setState(s);
+  this._stopEasing();
 };
 
 View.prototype.getDraggable = function() {
@@ -52,6 +56,11 @@ View.prototype.getDraggable = function() {
 
 View.prototype.setDraggable = function(f) {
   this._draggable = f;
+};
+
+View.prototype._handleBarScroll = function() {
+  this._stopEasing();
+  this.emit('scroll');
 };
 
 View.prototype._registerMouseEvents = function() {
@@ -65,9 +74,11 @@ View.prototype._handleMouseDown = function(e) {
   if (!this.getDraggable() || this._isDragging) {
     return;
   }
+  this._stopEasing();
   this._isDragging = true;
   this._dragStartCursorPos = this._mouseEventCoordinate(e);
   this._dragStartScrolledPixels = this.getState().getScrolledPixels();
+  this._dragVelocityTracker = new VelocityTracker(this._dragStartCursorPos);
   window.addEventListener('mousemove', this._boundMouseMove);
   window.addEventListener('mouseup', this._boundMouseUp);
 };
@@ -76,8 +87,12 @@ View.prototype._handleMouseMove = function(e) {
   if (!this._isDragging) {
     return;
   }
-  var diff = this._mouseEventCoordinate(e) - this._dragStartCursorPos;
+
+  var coord = this._mouseEventCoordinate(e);
+  var diff = coord - this._dragStartCursorPos;
   var newScrollX = this._dragStartScrolledPixels - diff;
+
+  this._dragVelocityTracker.pushOffset(coord);
 
   var s = this.getState();
   this.setState(new State(s.getTotalPixels(), s.getVisiblePixels(), newScrollX));
@@ -90,6 +105,13 @@ View.prototype._handleMouseUp = function(e) {
   this._isDragging = false;
   window.removeEventListener('mousemove', this._boundMouseMove);
   window.removeEventListener('mouseup', this._boundMouseUp);
+
+  var velocity = this._dragVelocityTracker.velocity();
+  this._dragVelocityTracker = null;
+  if (velocity === 0) {
+    return;
+  }
+  this._startEasing(velocity);
 };
 
 View.prototype._mouseEventCoordinate = function(e) {
@@ -97,6 +119,30 @@ View.prototype._mouseEventCoordinate = function(e) {
     return e.clientX;
   } else {
     return e.clientY;
+  }
+};
+
+View.prototype._startEasing = function(velocity) {
+  this._stopEasing();
+  this._ease = new Ease(-velocity, this.getState().getScrolledPixels());
+  this._ease.on('offset', function(x) {
+    if (x < 0 || x > this.getState().maxScrolledPixels()) {
+      this._stopEasing();
+    }
+    var s = this.getState();
+    this._bar.setState(new State(s.getTotalPixels(), s.getVisiblePixels(), x));
+    this.emit('scroll');
+  }.bind(this));
+  this._ease.on('done', function() {
+    this._ease = null;
+  }.bind(this));
+  this._ease.start();
+};
+
+View.prototype._stopEasing = function() {
+  if (this._ease !== null) {
+    this._ease.cancel();
+    this._ease = null;
   }
 };
 
