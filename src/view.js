@@ -18,11 +18,17 @@ function View(barPosition, content) {
   this._dragVelocityTracker = null;
   this._ease = null;
 
+  this._mouseListenersBound = false;
   this._boundMouseUp = this._handleMouseUp.bind(this);
   this._boundMouseMove = this._handleMouseMove.bind(this);
 
   this._registerMouseEvents();
   this._registerWheelEvents();
+
+  if ('ontouchstart' in document.documentElement) {
+    this._registerTouchEvents();
+  }
+
   this._bar.on('scroll', this._handleBarScroll.bind(this));
 }
 
@@ -71,24 +77,77 @@ View.prototype._registerMouseEvents = function() {
 };
 
 View.prototype._handleMouseDown = function(e) {
-  if (!this.getDraggable() || this._isDragging) {
-    return;
+  if (this._draggingStart(this._mouseEventCoordinate(e))) {
+    this._mouseListenersBound = true;
+    window.addEventListener('mousemove', this._boundMouseMove);
+    window.addEventListener('mouseup', this._boundMouseUp);
   }
-  this._stopEasing();
-  this._isDragging = true;
-  this._dragStartCursorPos = this._mouseEventCoordinate(e);
-  this._dragStartScrolledPixels = this.getState().getScrolledPixels();
-  this._dragVelocityTracker = new VelocityTracker(this._dragStartCursorPos);
-  window.addEventListener('mousemove', this._boundMouseMove);
-  window.addEventListener('mouseup', this._boundMouseUp);
 };
 
 View.prototype._handleMouseMove = function(e) {
+  this._draggingMove(this._mouseEventCoordinate(e));
+};
+
+View.prototype._handleMouseUp = function() {
+  this._draggingEnd();
+};
+
+View.prototype._mouseEventCoordinate = function(e) {
+  if (this._bar.getOrientation() === Bar.ORIENTATION_HORIZONTAL) {
+    return e.clientX;
+  } else {
+    return e.clientY;
+  }
+};
+
+View.prototype._registerTouchEvents = function() {
+  this._element.addEventListener('touchstart', this._handleTouchStart.bind(this));
+  this._element.addEventListener('touchmove', this._handleTouchMove.bind(this));
+  this._element.addEventListener('touchend', this._handleTouchDone.bind(this));
+  this._element.addEventListener('touchcancel', this._handleTouchDone.bind(this));
+};
+
+View.prototype._handleTouchStart = function(e) {
+  e.preventDefault();
+  this._draggingStart(this._touchEventCoordinate(e));
+};
+
+View.prototype._handleTouchMove = function(e) {
+  this._draggingMove(this._touchEventCoordinate(e));
+}
+
+View.prototype._handleTouchDone = function(e) {
+  this._draggingEnd();
+};
+
+View.prototype._touchEventCoordinate = function(e) {
+  var touch = e.changedTouches[0];
+  if (this._bar.getOrientation() === Bar.ORIENTATION_HORIZONTAL) {
+    return touch.clientX;
+  } else {
+    return touch.clientY;
+  }
+};
+
+View.prototype._draggingStart = function(coord) {
+  if (!this.getDraggable() || this._isDragging) {
+    return false;
+  }
+  this._isDragging = true;
+
+  this._stopEasing();
+  this._dragStartCursorPos = coord;
+  this._dragStartScrolledPixels = this.getState().getScrolledPixels();
+  this._dragVelocityTracker = new VelocityTracker(this._dragStartCursorPos);
+
+  return true;
+};
+
+View.prototype._draggingMove = function(coord) {
   if (!this._isDragging) {
-    return;
+    return false;
   }
 
-  var coord = this._mouseEventCoordinate(e);
   var diff = coord - this._dragStartCursorPos;
   var newScrollX = this._dragStartScrolledPixels - diff;
 
@@ -99,27 +158,28 @@ View.prototype._handleMouseMove = function(e) {
   this.emit('scroll');
 
   this._bar.flash();
+  return true;
 };
 
-View.prototype._handleMouseUp = function(e) {
+View.prototype._draggingEnd = function() {
+  if (!this._isDragging) {
+    return false;
+  }
   this._isDragging = false;
-  window.removeEventListener('mousemove', this._boundMouseMove);
-  window.removeEventListener('mouseup', this._boundMouseUp);
+
+  if (this._mouseListenersBound) {
+    this._mouseListenersBound = false;
+    window.removeEventListener('mousemove', this._boundMouseMove);
+    window.removeEventListener('mouseup', this._boundMouseUp);
+  }
 
   var velocity = this._dragVelocityTracker.velocity();
   this._dragVelocityTracker = null;
-  if (velocity === 0) {
-    return;
+  if (Math.abs(velocity) > 0) {
+    this._startEasing(velocity);
   }
-  this._startEasing(velocity);
-};
 
-View.prototype._mouseEventCoordinate = function(e) {
-  if (this._bar.getOrientation() === Bar.ORIENTATION_HORIZONTAL) {
-    return e.clientX;
-  } else {
-    return e.clientY;
-  }
+  return true;
 };
 
 View.prototype._startEasing = function(velocity) {
