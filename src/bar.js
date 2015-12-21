@@ -45,6 +45,10 @@ function Bar(position) {
   this._boundMouseMove = this._handleMouseMove.bind(this);
   this._boundMouseUp = this._handleMouseUp.bind(this);
   this._registerMouseEvents();
+
+  if ('ontouchstart' in document.documentElement) {
+    this._disableTouchMouseEmulation();
+  }
 }
 
 Bar.ORIENTATION_VERTICAL = 0;
@@ -210,3 +214,9 @@ Bar.prototype._mouseEventCoordinate = function(e) {
     return e.clientX - this._element.getBoundingClientRect().left;
   }
 }
+
+Bar.prototype._disableTouchMouseEmulation = function() {
+  this._element.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+  });
+};
