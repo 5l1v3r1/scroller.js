@@ -1,17 +1,37 @@
 window.addEventListener('load', function() {
-  var scrollingContent = document.createElement('canvas');
-  scrollingContent.style.position = 'absolute';
-  scrollingContent.style.width = '100%';
-  scrollingContent.style.height = '100%';
-  scrollingContent.style.top = '0';
-  scrollingContent.style.left = '0';
-  scrollingContent.style.backgroundColor = 'white';
+  var canvas = document.createElement('canvas');
+  canvas.style.position = 'absolute';
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.backgroundColor = 'white';
+  canvas.width = 400;
+  canvas.height = 300;
 
   var v = new window.scrollerjs.View(window.scrollerjs.View.BAR_POSITION_BOTTOM,
-    scrollingContent);
+    canvas);
   v.element().style.width = '400px';
   v.element().style.height = '300px';
   document.body.appendChild(v.element());
   v.setState(new window.scrollerjs.State(2000, 400, 2000-400));
   v.layout();
+  v.setDraggable(true);
+
+  var drawCanvas = function() {
+    var offset = v.getState().getScrolledPixels();
+    var ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(-offset, 0);
+    ctx.fillStyle = '#65bcd4';
+    for (var i = 0; i < 50; ++i) {
+      var x = i*40 + 5;
+      var height = (123*i*i + 120*i + 15*i*i*i + 6) % 257;
+      ctx.fillRect(x, canvas.height-5-height, 30, height);
+    }
+    ctx.restore();
+  };
+  v.on('scroll', drawCanvas);
+  drawCanvas();
 });
