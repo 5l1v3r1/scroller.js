@@ -1,5 +1,5 @@
 function Bar(position) {
-  EventEmitter.call(this);
+  window.EventEmitter.call(this);
 
   this._position = position;
   this._element = document.createElement('div');
@@ -57,7 +57,7 @@ Bar.ORIENTATION_HORIZONTAL = 1;
 Bar.HIDE_TIMEOUT = 1000;
 Bar.MIN_THUMB_SIZE = 30;
 
-Bar.prototype = Object.create(EventEmitter.prototype);
+Bar.prototype = Object.create(window.EventEmitter.prototype);
 
 Bar.prototype.element = function() {
   return this._element;

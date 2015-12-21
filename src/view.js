@@ -1,5 +1,5 @@
 function View(barPosition, content) {
-  EventEmitter.call(this);
+  window.EventEmitter.call(this);
 
   this._barPosition = barPosition;
   this._element = document.createElement('div');
@@ -28,7 +28,7 @@ View.BAR_POSITION_TOP = 1;
 View.BAR_POSITION_RIGHT = 2;
 View.BAR_POSITION_BOTTOM = 3;
 
-View.prototype = Object.create(EventEmitter.prototype);
+View.prototype = Object.create(window.EventEmitter.prototype);
 
 View.prototype.element = function() {
   return this._element;
