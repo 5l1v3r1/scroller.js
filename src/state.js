@@ -4,6 +4,12 @@ function State(totalPixels, visiblePixels, scrolledPixels) {
   this._scrolledPixels = scrolledPixels;
 }
 
+State.prototype.equals = function(s) {
+  return s._totalPixels === this._totalPixels &&
+    s._visiblePixels === this._visiblePixels &&
+    s._scrolledPixels === this._scrolledPixels;
+};
+
 State.prototype.getTotalPixels = function() {
   return this._totalPixels;
 };
@@ -43,3 +49,5 @@ State.prototype.scrolledRatio = function() {
 State.prototype.copy = function() {
   return new State(this._totalPixels, this._visiblePixels, this._scrolledPixels);
 };
+
+exports.State = State;

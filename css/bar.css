@@ -11,13 +11,15 @@
 }
 
 .scrollerjs-vertical-bar {
-  width: 12px;
-  height: 100%;
+  width: 14px;
+  height: calc(100% - 2px);
+  top: 1px;
 }
 
 .scrollerjs-horizontal-bar {
-  width: 100%;
-  height: 12px;
+  width: calc(100% - 2px);
+  left: 1px;
+  height: 14px;
 }
 
 .scrollerjs-thumb {
@@ -39,22 +41,6 @@
   -webkit-transition: width 0.5s ease, border-radius 0.5s ease;
 }
 
-.scrollerjs-bar:hover {
-  opacity: 1;
-}
-
-.scrollerjs-bar:hover > .scrollerjs-thumb {
-  border-radius: 6px;
-}
-
-.scrollerjs-bar:hover > .scrollerjs-horizontal-thumb {
-  height: 12px;
-}
-
-.scrollerjs-bar:hover > .scrollerjs-vertical-thumb {
-  width: 12px;
-}
-
 .scrollerjs-left-bar, .scrollerjs-top-bar {
   top: 0;
   left: 0;
@@ -66,9 +52,33 @@
 }
 
 .scrollerjs-bottom-thumb {
-  bottom: 0;
+  bottom: 2px;
 }
 
 .scrollerjs-right-thumb {
-  right: 0;
+  right: 2px;
+}
+
+.scrollerjs-top-thumb {
+  top: 2px;
+}
+
+.scrollerjs-left-thumb {
+  left: 2px;
+}
+
+.scrollerjs-bar-focus {
+  opacity: 1;
+}
+
+.scrollerjs-bar-focus > .scrollerjs-thumb {
+  border-radius: 6px;
+}
+
+.scrollerjs-bar-focus > .scrollerjs-horizontal-thumb {
+  height: 12px;
+}
+
+.scrollerjs-bar-focus > .scrollerjs-vertical-thumb {
+  width: 12px;
 }

@@ -1,4 +1,6 @@
 function Bar(position) {
+  EventEmitter.call(this);
+
   this._position = position;
   this._element = document.createElement('div');
   this._element.className = 'scrollerjs-bar';
@@ -37,6 +39,11 @@ function Bar(position) {
   this._hideTimeout = null;
   this._state = new State(0, 0, 0);
 
+  this._isDragging = false;
+  this._dragStartMousePos = 0;
+  this._dragStartScrolledRatio = 0;
+  this._boundMouseMove = this._handleMouseMove.bind(this);
+  this._boundMouseUp = this._handleMouseUp.bind(this);
   this._registerMouseEvents();
 }
 
@@ -46,28 +53,20 @@ Bar.ORIENTATION_HORIZONTAL = 1;
 Bar.HIDE_TIMEOUT = 1000;
 Bar.MIN_THUMB_SIZE = 30;
 
+Bar.prototype = Object.create(EventEmitter.prototype);
+
 Bar.prototype.element = function() {
   return this._element;
 };
 
 Bar.prototype.layout = function() {
-  var totalSize;
+  var params = this._visualParameters();
   if (this._orientation() === Bar.ORIENTATION_HORIZONTAL) {
-    totalSize = this._element.offsetWidth;
+    this._thumb.style.left = Math.round(params.offset) + 'px';
+    this._thumb.style.width = Math.round(params.thumbSize) + 'px';
   } else {
-    totalSize = this._element.offsetHeight;
-  }
-  var barSize = Math.max(this._state.visibleRatio()*totalSize, Bar.MIN_THUMB_SIZE);
-
-  var offsetSpace = totalSize - barSize;
-  var offset = offsetSpace * this._state.scrolledRatio();
-
-  if (this._orientation() === Bar.ORIENTATION_HORIZONTAL) {
-    this._thumb.style.left = Math.round(offset) + 'px';
-    this._thumb.style.width = Math.round(barSize) + 'px';
-  } else {
-    this._thumb.style.top = Math.round(offset) + 'px';
-    this._thumb.style.height = Math.round(barSize) + 'px';
+    this._thumb.style.top = Math.round(params.offset) + 'px';
+    this._thumb.style.height = Math.round(params.thumbSize) + 'px';
   }
 };
 
@@ -80,16 +79,48 @@ Bar.prototype.flash = function() {
   this._hideTimeout = setTimeout(this._unflash.bind(this), Bar.HIDE_TIMEOUT);
 };
 
+Bar.prototype.getState = function() {
+  return this._state;
+};
+
+Bar.prototype.setState = function(s) {
+  if (!this._state.equals(s)) {
+    this._state = s;
+    this.layout();
+  }
+};
+
 Bar.prototype._unflash = function() {
   this._hideTimeout = null;
   var classes = this._element.className.split(' ');
   for (var i = 0, len = classes.length; i < len; ++i) {
     if (classes[i] === 'scrollerjs-bar-flashing') {
       classes.splice(i, 1);
-      break;
+      this._element.className = classes.join(' ');
+      return;
     }
   }
-  this._element.className = classes.join(' ');
+};
+
+Bar.prototype._visualParameters = function() {
+  var size = this._size();
+  var thumbSize = Math.max(Bar.MIN_THUMB_SIZE, size*this._state.visibleRatio());
+  var maxOffset = size - thumbSize;
+  var offset = maxOffset * this._state.scrolledRatio();
+  return {
+    size: size,
+    thumbSize: thumbSize,
+    maxOffset: maxOffset,
+    offset: offset
+  };
+};
+
+Bar.prototype._size = function() {
+  if (this._orientation() === Bar.ORIENTATION_HORIZONTAL) {
+    return this._element.offsetWidth;
+  } else {
+    return this._element.offsetHeight;
+  }
 };
 
 Bar.prototype._orientation = function() {
@@ -97,5 +128,85 @@ Bar.prototype._orientation = function() {
 };
 
 Bar.prototype._registerMouseEvents = function() {
-  this._element.addEventListener('mouseleave', this.flash.bind(this));
+  this._element.addEventListener('mouseenter', this._handleMouseEnter.bind(this));
+  this._element.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
+  this._element.addEventListener('mousedown', this._handleMouseDown.bind(this));
 };
+
+Bar.prototype._handleMouseEnter = function() {
+  addClass(this._element, 'scrollerjs-bar-focus');
+};
+
+Bar.prototype._handleMouseLeave = function() {
+  if (this._isDragging) {
+    return;
+  }
+  removeClass(this._element, 'scrollerjs-bar-focus');
+  this.flash();
+};
+
+Bar.prototype._handleMouseDown = function(e) {
+  if (this._isDragging) {
+    return;
+  }
+  this._isDragging = true;
+  window.addEventListener('mousemove', this._boundMouseMove);
+  window.addEventListener('mouseup', this._boundMouseUp);
+
+  var params = this._visualParameters();
+  var coordinate = this._mouseEventCoordinate(e);
+  if (coordinate < params.offset || coordinate >= params.offset+params.thumbSize) {
+    var newOffset = Math.max(0, Math.min(params.maxOffset, coordinate-(params.thumbSize/2)));
+    this._state = new State(this._state.getTotalPixels(), this._state.getVisiblePixels(),
+      (newOffset/params.maxOffset)*this._state.maxScrolledPixels());
+    this.layout();
+    this.emit('scroll');
+  }
+
+  this._dragStartScrolledRatio = this._state.scrolledRatio();
+  this._dragStartMousePos = coordinate;
+
+  e.preventDefault();
+};
+
+Bar.prototype._handleMouseMove = function(e) {
+  if (!this._isDragging) {
+    throw new Error('got unexpected mousemove event');
+  }
+
+  var coordinate = this._mouseEventCoordinate(e);
+  var diff = coordinate - this._dragStartMousePos;
+  var params = this._visualParameters();
+
+  var startOffset = this._dragStartScrolledRatio * params.maxOffset;
+  var offset = Math.max(0, Math.min(params.maxOffset, startOffset+diff));
+
+  this._state = new State(this._state.getTotalPixels(), this._state.getVisiblePixels(),
+    (offset/params.maxOffset)*this._state.maxScrolledPixels());
+  this.layout();
+  this.emit('scroll');
+};
+
+Bar.prototype._handleMouseUp = function(e) {
+  if (!this._isDragging) {
+    throw new Error('got unexpected mouseup event');
+  }
+  this._isDragging = false;
+  window.removeEventListener('mousemove', this._boundMouseMove);
+  window.removeEventListener('mouseup', this._boundMouseUp);
+
+  var barRect = this._element.getBoundingClientRect();
+  if (e.clientX < barRect.left || e.clientY < barRect.top ||
+      e.clientX >= barRect.left+this._element.offsetWidth ||
+      e.clientY >= barRect.top+this._element.offsetHeight) {
+    this._handleMouseLeave();
+  }
+};
+
+Bar.prototype._mouseEventCoordinate = function(e) {
+  if (this._orientation() === Bar.ORIENTATION_VERTICAL) {
+    return e.clientY - this._element.getBoundingClientRect().top;
+  } else {
+    return e.clientX - this._element.getBoundingClientRect().left;
+  }
+}
