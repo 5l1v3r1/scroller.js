@@ -34,7 +34,8 @@ canvas.style.backgroundColor = 'white';
 canvas.height = 300;
 
 var position = window.scrollerjs.View.BAR_POSITION_BOTTOM;
-var v = new window.scrollerjs.View(position, canvas);
+var v = new window.scrollerjs.View(position);
+v.setContent(canvas);
 v.element().style.width = '100%';
 v.element().style.height = '300px';
 document.body.appendChild(v.element());

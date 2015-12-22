@@ -5,7 +5,7 @@ function View(barPosition, content) {
   this._element = document.createElement('div');
   this._element.style.position = 'relative';
 
-  this._element.appendChild(content);
+  this._content = null;
 
   this._bar = new Bar(barPosition);
   this._element.appendChild(this._bar.element());
@@ -62,6 +62,20 @@ View.prototype.getDraggable = function() {
 
 View.prototype.setDraggable = function(f) {
   this._draggable = f;
+};
+
+View.prototype.getContent = function() {
+  return this._content;
+};
+
+View.prototype.setContent = function(c) {
+  if (this._content !== null) {
+    this._element.removeChild(this._content);
+  }
+  this._content = c;
+  if (c !== null) {
+    this._element.insertBefore(c, this._bar.element());
+  }
 };
 
 View.prototype.flash = function() {
