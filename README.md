@@ -53,7 +53,7 @@ An instance of View implements the following methods:
 
 In addition, a *View* is an [EventEmitter](https://github.com/unixpickle/eventemitter.js). It emits the following events:
 
- * scroll - this is sent to notify listeners that the View has been scrolled. This will not be triggered by a `setState()` call. It will only be triggered if the user manually scrolls the content.
+ * **scroll** - this is sent to notify listeners that the View has been scrolled. This will not be triggered by a `setState()` call. It will only be triggered if the user manually scrolls the content.
 
 ## The State class
 
@@ -65,9 +65,9 @@ var state = new window.scrollerjs.State(totalPixels, visiblePixels, scrolledPixe
 
 For more information on the constructor arguments, see the corresponding getters. Speaking of which, State implements the following methods:
 
- * *bool* equals(s) - check if this state is equal to another state.
- * *number* **getTotalPixels**() - get the total content size (width or height, depending on the View's orientation), in pixels. Essentially, this is the amount of content that the user would see if their screen was big enough that they did not need to scroll.
- * *number* **getVisiblePixels**() - get the amount of content (width or height, depending on the View's orientation) that the user can see at any given time. If this is greater than or equal to `getTotalPixels()`, then the View does not need to scroll.
+ * *bool* **equals**(s) - check if this state is equal to another state.
+ * *number* **getTotalPixels**() - get the total content size in pixels. This is a width or a height, depending on the View's orientation. Essentially, this is the amount of content that the user would see if their screen was big enough that they did not need to scroll.
+ * *number* **getVisiblePixels**() - get the amount of content (width or height) that the user can see without scrolling. If this is greater than or equal to `getTotalPixels()`, then the View does not need to scroll.
  * *number* **getScrolledPixels**() - get the number of pixels from the left that the View is scrolled. If this is 0, then the leftmost part of the content should be showing. This will always be non-negative.
  * *number* **maxScrolledPixels**() - get the maximum number of pixels the View could be scrolled. Usually, this is `getTotalPixels() - getVisiblePixels()`. If the View does not need to scroll, this is 0.
  * *number* **visibleRatio**() - get a number between 0 and 1 representing how much of the content is visible at any given time.
