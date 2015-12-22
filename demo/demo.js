@@ -13,8 +13,8 @@ function addHorizontalCanvas() {
   canvas.style.backgroundColor = 'white';
   canvas.height = 600;
 
-  var v = new window.scrollerjs.View(window.scrollerjs.View.BAR_POSITION_BOTTOM,
-    canvas);
+  var v = new window.scrollerjs.View(window.scrollerjs.View.BAR_POSITION_BOTTOM);
+  v.setContent(canvas);
   v.element().style.width = '100%';
   v.element().style.height = '300px';
   document.body.appendChild(v.element());
@@ -43,6 +43,7 @@ function addHorizontalCanvas() {
     canvas.width = v.element().offsetWidth * 2;
     v.setState(new window.scrollerjs.State(2000, v.element().offsetWidth,
       v.getState().getScrolledPixels()));
+    v.layout();
     drawCanvas();
   });
 
@@ -65,8 +66,8 @@ function addVerticalCanvas() {
   canvas.height = 600;
   canvas.width = 400;
 
-  var v = new window.scrollerjs.View(window.scrollerjs.View.BAR_POSITION_RIGHT,
-    canvas);
+  var v = new window.scrollerjs.View(window.scrollerjs.View.BAR_POSITION_RIGHT);
+  v.setContent(canvas);
   v.element().style.width = '200px';
   v.element().style.height = '300px';
   v.element().style.left = 'calc(50% - 100px)';

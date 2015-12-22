@@ -5,9 +5,9 @@ function State(totalPixels, visiblePixels, scrolledPixels) {
 }
 
 State.prototype.equals = function(s) {
-  return s._totalPixels === this._totalPixels &&
-    s._visiblePixels === this._visiblePixels &&
-    s._scrolledPixels === this._scrolledPixels;
+  return s.getTotalPixels() === this.getTotalPixels() &&
+    s.getVisiblePixels() === this.getVisiblePixels() &&
+    s.getScrolledPixels() === this.getScrolledPixels();
 };
 
 State.prototype.getTotalPixels = function() {
@@ -44,10 +44,6 @@ State.prototype.scrolledRatio = function() {
     return 0;
   }
   return this.getScrolledPixels() / maxScrolled;
-};
-
-State.prototype.copy = function() {
-  return new State(this._totalPixels, this._visiblePixels, this._scrolledPixels);
 };
 
 exports.State = State;
