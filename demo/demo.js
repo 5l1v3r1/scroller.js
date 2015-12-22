@@ -42,6 +42,7 @@ function addHorizontalCanvas() {
     canvas.width = v.element().offsetWidth;
     v.setState(new window.scrollerjs.State(2000, v.element().offsetWidth,
       v.getState().getScrolledPixels()));
+    v.layout();
     drawCanvas();
   });
 
