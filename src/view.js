@@ -18,6 +18,9 @@ function View(barPosition, content) {
   this._dragVelocityTracker = null;
   this._ease = null;
 
+  this._touchTriggerClick = false;
+  this._cancelMouseClick = false;
+
   this._mouseListenersBound = false;
   this._boundMouseUp = this._handleMouseUp.bind(this);
   this._boundMouseMove = this._handleMouseMove.bind(this);
@@ -91,23 +94,39 @@ View.prototype._registerMouseEvents = function() {
   this._element.addEventListener('mouseenter', function() {
     this.flash();
   }.bind(this));
-  this._element.addEventListener('mousedown', this._handleMouseDown.bind(this));
+  this._element.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+  this._element.addEventListener('click', this._handleMouseClick.bind(this), true);
 };
 
 View.prototype._handleMouseDown = function(e) {
+  // NOTE: the user can't simultaneously click and stop easing.
+  this._cancelMouseClick = (this._ease !== null);
+
   if (this._draggingStart(this._mouseEventCoordinate(e))) {
+    e.stopPropagation();
     this._mouseListenersBound = true;
-    window.addEventListener('mousemove', this._boundMouseMove);
-    window.addEventListener('mouseup', this._boundMouseUp);
+    window.addEventListener('mousemove', this._boundMouseMove, true);
+    window.addEventListener('mouseup', this._boundMouseUp, true);
   }
 };
 
 View.prototype._handleMouseMove = function(e) {
-  this._draggingMove(this._mouseEventCoordinate(e));
+  if (this._draggingMove(this._mouseEventCoordinate(e))) {
+    this._cancelMouseClick = true;
+    e.stopPropagation();
+  }
 };
 
-View.prototype._handleMouseUp = function() {
-  this._draggingEnd();
+View.prototype._handleMouseUp = function(e) {
+  if (this._draggingEnd()) {
+    e.stopPropagation();
+  }
+};
+
+View.prototype._handleMouseClick = function(e) {
+  if (this._cancelMouseClick) {
+    e.stopPropagation();
+  }
 };
 
 View.prototype._mouseEventCoordinate = function(e) {
@@ -122,20 +141,32 @@ View.prototype._registerTouchEvents = function() {
   this._element.addEventListener('touchstart', this._handleTouchStart.bind(this));
   this._element.addEventListener('touchmove', this._handleTouchMove.bind(this));
   this._element.addEventListener('touchend', this._handleTouchDone.bind(this));
-  this._element.addEventListener('touchcancel', this._handleTouchDone.bind(this));
+  this._element.addEventListener('touchcancel', function() {
+    this._touchTriggerClick = false;
+    this._handleTouchDone();
+  }.bind(this));
 };
 
 View.prototype._handleTouchStart = function(e) {
   e.preventDefault();
+
+  // NOTE: the user can't simultaneously tap and stop easing.
+  this._touchTriggerClick = (this._ease === null);
+
   this._draggingStart(this._touchEventCoordinate(e));
 };
 
 View.prototype._handleTouchMove = function(e) {
-  this._draggingMove(this._touchEventCoordinate(e));
+  if (this._draggingMove(this._touchEventCoordinate(e))) {
+    this._touchTriggerClick = false;
+  }
 };
 
 View.prototype._handleTouchDone = function(e) {
   this._draggingEnd();
+  if (this._touchTriggerClick) {
+    this._triggerClickEvent(e.changedTouches[0]);
+  }
 };
 
 View.prototype._touchEventCoordinate = function(e) {
@@ -145,6 +176,26 @@ View.prototype._touchEventCoordinate = function(e) {
   } else {
     return touch.clientY;
   }
+};
+
+View.prototype._triggerClickEvent = function(posInfo) {
+  if (this._content === null) {
+    return;
+  }
+
+  var evt;
+  var needsManualConfig = true;
+  if ('createEvent' in document) {
+    evt = document.createEvent('MouseEvents');
+    evt.initMouseEvent('click', true, true, window, 1, posInfo.screenX,
+      posInfo.screenY, posInfo.clientX, posInfo.clientY, false, false, false,
+      false, 0, null);
+  } else {
+    needsManualConfig = false;
+    evt = new MouseEvent('click', posInfo);
+  }
+
+  this._content.dispatchEvent(evt);
 };
 
 View.prototype._draggingStart = function(coord) {

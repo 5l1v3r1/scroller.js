@@ -78,3 +78,9 @@ Note that a State will always clip its values to valid ranges. For example, you 
 ## Example
 
 There are two examples in [demo/demo.js](demo/demo.js).
+
+## Mouse events
+
+The `mousemove`, `mouseleave` and `mouseenter` events will be propagated to the content element transparently. However, scroller.js prevents mouse event emulation on touch devices, so `mouseenter` and the like will not be triggered by touches.
+
+The `mouseclick` is sent to the content element on both mouse devices (as a regular event) and touch devices (as an emulated event). It is even propagated if dragging is enabled, although clicks which resulted from a drag are filtered out.
