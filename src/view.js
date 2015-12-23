@@ -99,6 +99,13 @@ View.prototype._registerMouseEvents = function() {
 };
 
 View.prototype._handleMouseDown = function(e) {
+  var rect = this._bar.element().getBoundingClientRect();
+  if (e.clientX >= rect.left && e.clientY >= rect.top &&
+      e.clientX < rect.left+this._bar.element().offsetWidth &&
+      e.clientY < rect.top+this._bar.element().offsetHeight) {
+    return;
+  }
+
   // NOTE: the user can't simultaneously click and stop easing.
   this._cancelMouseClick = (this._ease !== null);
 
