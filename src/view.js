@@ -132,7 +132,7 @@ View.prototype._handleTouchStart = function(e) {
 
 View.prototype._handleTouchMove = function(e) {
   this._draggingMove(this._touchEventCoordinate(e));
-}
+};
 
 View.prototype._handleTouchDone = function(e) {
   this._draggingEnd();

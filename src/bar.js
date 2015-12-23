@@ -219,7 +219,7 @@ Bar.prototype._mouseEventCoordinate = function(e) {
   } else {
     return e.clientX - this._element.getBoundingClientRect().left;
   }
-}
+};
 
 Bar.prototype._disableTouchMouseEmulation = function() {
   this._element.addEventListener('touchstart', function(e) {
