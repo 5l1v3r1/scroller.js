@@ -87,7 +87,7 @@ View.prototype.flash = function() {
 
 View.prototype._handleBarScroll = function() {
   this._stopEasing();
-  this.emit('scroll');
+  this._emitScroll();
 };
 
 View.prototype._registerMouseEvents = function() {
@@ -231,7 +231,7 @@ View.prototype._draggingMove = function(coord) {
 
   var s = this.getState();
   this.setState(new State(s.getTotalPixels(), s.getVisiblePixels(), newScrollX));
-  this.emit('scroll');
+  this._emitScroll();
 
   this.flash();
   return true;
@@ -267,7 +267,7 @@ View.prototype._startEasing = function(velocity) {
     }
     var s = this.getState();
     this._bar.setState(new State(s.getTotalPixels(), s.getVisiblePixels(), x));
-    this.emit('scroll');
+    this._emitScroll();
   }.bind(this));
   this._ease.on('done', function() {
     this._ease = null;
@@ -305,7 +305,7 @@ View.prototype._registerWheelEvents = function() {
         var state = this.getState();
         this.setState(new State(state.getTotalPixels(), state.getVisiblePixels(),
           state.getScrolledPixels() + pendingDelta));
-        this.emit('scroll');
+        this._emitScroll();
 
         pendingDelta = 0;
         secondaryDelta = 0;
@@ -322,6 +322,12 @@ View.prototype._registerWheelEvents = function() {
     }
     e.preventDefault();
   }.bind(this));
+};
+
+View.prototype._emitScroll = function() {
+  if (this.getState().maxScrolledPixels() !== 0) {
+    this.emit('scroll');
+  }
 };
 
 exports.View = View;
