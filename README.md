@@ -83,4 +83,13 @@ There are two examples in [demo/demo.js](demo/demo.js).
 
 The `mousemove`, `mouseleave` and `mouseenter` events will be propagated to the content element transparently. However, scroller.js prevents mouse event emulation on touch devices, so `mouseenter` and the like will not be triggered by touches.
 
-The `mouseclick` is sent to the content element on both mouse devices (as a regular event) and touch devices (as an emulated event). It is even propagated if dragging is enabled, although clicks which resulted from a drag are filtered out.
+The `click` event is sent to the content element on both mouse devices (as a regular event) and touch devices (as an emulated event). It is even propagated if dragging is enabled, although clicks which resulted from a drag are filtered out.
+
+By default, drag scrolling will work over any element; the user will be able to click on any element to drag and scroll the content. Sometimes, you may have an element (e.g., a button) that prevents drag scrolling. To do this, intercept the `mousedown` event and stop the event's propagation:
+
+```js
+button.addEventListener('mousedown', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+});
+```
