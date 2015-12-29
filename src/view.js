@@ -42,6 +42,7 @@ View.BAR_POSITION_RIGHT = 2;
 View.BAR_POSITION_BOTTOM = 3;
 
 View.prototype = Object.create(window.EventEmitter.prototype);
+View.prototype.constructor = View;
 
 View.prototype.element = function() {
   return this._element;

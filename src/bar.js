@@ -58,6 +58,7 @@ Bar.HIDE_TIMEOUT = 1000;
 Bar.MIN_THUMB_SIZE = 30;
 
 Bar.prototype = Object.create(window.EventEmitter.prototype);
+Bar.prototype.constructor = Bar;
 
 Bar.prototype.element = function() {
   return this._element;

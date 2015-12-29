@@ -16,6 +16,7 @@ function Ease(startVelocity, startOffset) {
 Ease.DURATION = 1000;
 
 Ease.prototype = Object.create(window.EventEmitter.prototype);
+Ease.prototype.constructor = Ease;
 
 Ease.prototype.start = function() {
   this._req = window.requestAnimationFrame(this._boundTick);
