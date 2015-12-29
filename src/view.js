@@ -1,4 +1,4 @@
-function View(barPosition, content) {
+function View(barPosition) {
   window.EventEmitter.call(this);
 
   this._barPosition = barPosition;
