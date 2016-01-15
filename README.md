@@ -4,9 +4,7 @@ This will be a web API for creating custom scrolling views. It will support mous
 
 # Dependencies
 
-This uses [eventemitter.js](https://github.com/unixpickle/eventemitter.js).
-
-This also requires window.requestAnimationFrame, so you must polyfill that if you wish to use this on older browsers.
+This uses [eventemitter.js](https://github.com/unixpickle/eventemitter.js) and [harmonizer](https://github.com/unixpickle/harmonizer).
 
 # Usage
 
@@ -42,6 +40,7 @@ For bottom and top scrollbars, scrolling will be done horizontally. For left and
 
 An instance of View implements the following methods:
 
+ * [Harmonizer](https://github.com/unixpickle/harmonizer) **harmonizer**() - get the harmonizer that the scroll view uses for animations and wheel-event grouping. This *Harmonizer* will never request redraws, but the *View* may emit scroll events during animation frames.
  * *DOMElement* **element**() - get the DOM element for the View. This element will be relatively positioned by default. It is up to you to determine how this element is presented to the user. Whenever the element's size changes, you should call `layout()`.
  * *void* **layout**() - notify the View that its element has changed size. You should call this immediately after adding the View's root element to the DOM.
  * [State](#the-state-class) **getState**() - get the current scrolling state. You may call this in order to get the scroll offset when drawing your content.

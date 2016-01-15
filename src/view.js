@@ -1,6 +1,8 @@
 function View(barPosition) {
   window.EventEmitter.call(this);
 
+  this._scrollWheelHarmonizer = new window.harmonizer.Harmonizer();
+
   this._barPosition = barPosition;
   this._element = document.createElement('div');
   this._element.style.position = 'relative';
@@ -43,6 +45,10 @@ View.BAR_POSITION_BOTTOM = 3;
 
 View.prototype = Object.create(window.EventEmitter.prototype);
 View.prototype.constructor = View;
+
+View.prototype.harmonizer = function() {
+  return this._scrollWheelHarmonizer;
+};
 
 View.prototype.element = function() {
   return this._element;
@@ -270,7 +276,8 @@ View.prototype._draggingEnd = function() {
 
 View.prototype._startEasing = function(velocity) {
   this._stopEasing();
-  this._ease = new Ease(-velocity, this.getState().getScrolledPixels());
+  var h = this._scrollWheelHarmonizer.spawnChild();
+  this._ease = new Ease(h, -velocity, this.getState().getScrolledPixels());
   this._ease.on('offset', function(x) {
     if (x < 0 || x > this.getState().maxScrolledPixels()) {
       this._stopEasing();
@@ -280,6 +287,7 @@ View.prototype._startEasing = function(velocity) {
     this._emitScroll();
   }.bind(this));
   this._ease.on('done', function() {
+    this._scrollWheelHarmonizer.removeChild(this._ease.harmonizer());
     this._ease = null;
   }.bind(this));
   this._ease.start();
@@ -288,6 +296,7 @@ View.prototype._startEasing = function(velocity) {
 View.prototype._stopEasing = function() {
   if (this._ease !== null) {
     this._ease.cancel();
+    this._scrollWheelHarmonizer.removeChild(this._ease.harmonizer());
     this._ease = null;
   }
 };
@@ -297,32 +306,31 @@ View.prototype._registerWheelEvents = function() {
 
   var pendingDelta = 0;
   var secondaryDelta = 0;
-  var pendingRequest = false;
-  this._element.addEventListener('wheel', function(e) {
-    if (!pendingRequest) {
-      pendingRequest = true;
-      window.requestAnimationFrame(function() {
-        pendingRequest = false;
 
-        // NOTE: when you scroll vertically on a trackpad on OS X,
-        // it unwantedly scrolls horizontally by a slight amount.
-        if (Math.abs(secondaryDelta) > 2*Math.abs(pendingDelta)) {
-          pendingDelta = 0;
-          secondaryDelta = 0;
-          return;
-        }
+  this._scrollWheelHarmonizer.on('animationFrame', function() {
+    this._scrollWheelHarmonizer.stop();
 
-        var state = this.getState();
-        this.setState(new State(state.getTotalPixels(), state.getVisiblePixels(),
-          state.getScrolledPixels() + pendingDelta));
-        this._emitScroll();
-
-        pendingDelta = 0;
-        secondaryDelta = 0;
-
-        this.flash();
-      }.bind(this));
+    // NOTE: when you scroll vertically on a trackpad on OS X,
+    // it unwantedly scrolls horizontally by a slight amount.
+    if (Math.abs(secondaryDelta) > 2*Math.abs(pendingDelta)) {
+      pendingDelta = 0;
+      secondaryDelta = 0;
+      return;
     }
+
+    var state = this.getState();
+    this.setState(new State(state.getTotalPixels(), state.getVisiblePixels(),
+      state.getScrolledPixels() + pendingDelta));
+    this._emitScroll();
+
+    pendingDelta = 0;
+    secondaryDelta = 0;
+
+    this.flash();
+  }.bind(this));
+
+  this._element.addEventListener('wheel', function(e) {
+    this._scrollWheelHarmonizer.start();
     if (this._bar.getOrientation() === Bar.ORIENTATION_HORIZONTAL) {
       pendingDelta += e.deltaX;
       secondaryDelta += e.deltaY;
