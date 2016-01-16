@@ -1,7 +1,8 @@
-function View(barPosition) {
+function View(barPosition, context) {
   window.EventEmitter.call(this);
 
-  this._scrollWheelHarmonizer = new window.harmonizer.Harmonizer();
+  var harmonizerContext = context || window.harmonizer.defaultContext;
+  this._scrollWheelHarmonizer = new window.harmonizer.Harmonizer(context || harmonizerContext);
 
   this._barPosition = barPosition;
   this._element = document.createElement('div');
@@ -45,10 +46,6 @@ View.BAR_POSITION_BOTTOM = 3;
 
 View.prototype = Object.create(window.EventEmitter.prototype);
 View.prototype.constructor = View;
-
-View.prototype.harmonizer = function() {
-  return this._scrollWheelHarmonizer;
-};
 
 View.prototype.element = function() {
   return this._element;

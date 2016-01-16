@@ -38,9 +38,10 @@ The `position` argument specifies where the scrollbar should be. It can be any o
 
 For bottom and top scrollbars, scrolling will be done horizontally. For left and right scrollbars, scrolling will be done vertically. Currently, a View cannot scroll both horizontally and vertically.
 
+If you plan to use a [harmonizer](https://github.com/unixpickle/harmonizer) context other than the default one, you can pass a second, optional parameter to the View's constructor. This parameter is the harmonizer context that the View will use for all of its animations. The View will join scroll events and easing events using Harmonizers so that your content does not need to repaint itself redundantly if the user scrolls during an animation inside the content.
+
 An instance of View implements the following methods:
 
- * [Harmonizer](https://github.com/unixpickle/harmonizer) **harmonizer**() - get the harmonizer that the scroll view uses for animations and wheel-event grouping. This *Harmonizer* will never request redraws, but the *View* may emit scroll events during animation frames.
  * *DOMElement* **element**() - get the DOM element for the View. This element will be relatively positioned by default. It is up to you to determine how this element is presented to the user. Whenever the element's size changes, you should call `layout()`.
  * *void* **layout**() - notify the View that its element has changed size. You should call this immediately after adding the View's root element to the DOM.
  * [State](#the-state-class) **getState**() - get the current scrolling state. You may call this in order to get the scroll offset when drawing your content.
