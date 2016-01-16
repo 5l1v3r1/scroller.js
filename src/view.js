@@ -304,9 +304,7 @@ View.prototype._registerWheelEvents = function() {
   var pendingDelta = 0;
   var secondaryDelta = 0;
 
-  this._scrollWheelHarmonizer.on('animationFrame', function() {
-    this._scrollWheelHarmonizer.stop();
-
+  this._scrollWheelHarmonizer.makeSingleShot(function() {
     // NOTE: when you scroll vertically on a trackpad on OS X,
     // it unwantedly scrolls horizontally by a slight amount.
     if (Math.abs(secondaryDelta) > 2*Math.abs(pendingDelta)) {
