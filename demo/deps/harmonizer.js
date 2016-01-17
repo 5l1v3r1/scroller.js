@@ -1,4 +1,4 @@
-// harmonizer version 0.4.0
+// harmonizer version 0.4.3
 //
 // Copyright (c) 2016, Alex Nichol.
 // All rights reserved.
@@ -91,6 +91,18 @@
   Harmonizer.prototype = Object.create(EventEmitter.prototype);
   Harmonizer.prototype.constructor = Harmonizer;
 
+  Harmonizer.prototype.getContext = function() {
+    return this._context;
+  };
+
+  Harmonizer.prototype.isAnimating = function() {
+    return this._animationState === ANIMATION_RUNNING;
+  };
+
+  Harmonizer.prototype.isPaused = function() {
+    return this._animationState === ANIMATION_PAUSED;
+  };
+
   Harmonizer.prototype.start = function() {
     switch (this._animationState) {
     case ANIMATION_RUNNING:
@@ -182,7 +194,18 @@
 
   Harmonizer.prototype._handleFrame = function(time) {
     assert(this._animationState === ANIMATION_RUNNING);
-    this.emit('animationFrame', time-this._animationStartTime+this._animationSkipTime);
+
+    if (time < this._animationStartTime) {
+      // This may occur in an edge case when the animation is started in a
+      // requestAnimationFrame() handler that was triggered right before the
+      // context's animation frame handler, since the same timestamp is passed
+      // to all requestAnimationFrame handlers even though Performance.now()
+      // might a bit ahead.
+      this._animationStartTime = time;
+    }
+
+    var elapsed = time - this._animationStartTime + this._animationSkipTime;
+    this.emit('animationFrame', elapsed);
   };
 
   Harmonizer.prototype._paint = function() {
