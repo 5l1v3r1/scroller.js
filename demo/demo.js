@@ -56,46 +56,32 @@ function addHorizontalCanvas() {
 }
 
 function addVerticalCanvas() {
-  var canvas = document.createElement('canvas');
-  canvas.style.position = 'absolute';
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
-  canvas.style.top = '0';
-  canvas.style.left = '0';
-  canvas.style.backgroundColor = 'white';
-  canvas.height = 600;
-  canvas.width = 400;
+  var content = document.getElementById('vertical-content');
+  document.body.removeChild(content);
+  content.style.width = '100%';
+  content.style.display = 'block';
+  content.style.backgroundColor = 'white';
 
   var v = new window.scrollerjs.View(window.scrollerjs.View.BAR_POSITION_RIGHT);
-  v.setContent(canvas);
+  v.setContent(content);
+  v.element().style.overflow = 'hidden';
   v.element().style.width = '200px';
   v.element().style.height = '300px';
   v.element().style.left = 'calc(50% - 100px)';
   v.element().style.top = '20px';
   v.element().style.marginBottom = '40px';
   document.body.appendChild(v.element());
-  v.setState(new window.scrollerjs.State(2000, 300, 2000-300));
+  v.setState(new window.scrollerjs.State(content.getBoundingClientRect().height, 300, 0));
   v.layout();
   v.setDraggable(true);
 
-  var drawCanvas = function() {
+  var update = function() {
     var offset = v.getState().getScrolledPixels();
-    var ctx = canvas.getContext('2d');
-    ctx.save();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.scale(2, 2);
-    ctx.translate(0, -offset);
-    ctx.fillStyle = '#65bcd4';
-    for (var i = 0; i < 50; ++i) {
-      var y = i*40 + 5;
-      var width = (123*i*i + 120*i + 15*i*i*i + 6) % 150;
-      ctx.fillRect(5, y, width, 30);
-    }
-    ctx.restore();
+    content.style.top = Math.round(-offset) + 'px';
   };
 
-  v.on('scroll', drawCanvas);
-  drawCanvas();
+  v.on('scroll', update);
+  update();
 
   v.flash();
 }
